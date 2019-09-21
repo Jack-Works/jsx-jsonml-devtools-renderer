@@ -41,6 +41,18 @@ React.installCustomObjectFormatter(new MyObjectCustomFormatter())
 
 -   an `onClick` attribute is available for any tags except `object`. Due to technical limitation, the `onClick` event will be only fired once.
 -   an `img` tag. With attributes `src`(required), `width`(optional) and `height`(optional)
+-   a `code` tag.
+-   a `br` tag.
+-   a `variant` attribute is available for any tags except `object`. It can used to specify some default styles.
+
+## APIs
+
+-   Fragment (Used to support `<></>` syntax)
+-   createElement (used to support JSX)
+-   createElementTyped (same as createElement, but have a more stricter type)
+-   `installCustomObjectFormatter(formatter)` (install the formatter to Chrome devtools)
+-   `isJSXElement(x)` is it a JSX Element
+-   `const [state, setState, forceRender] = useState(inspectedObject, initialStateCreator)` (used to preserve states between renders)
 
 ## JSX Features
 

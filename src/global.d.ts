@@ -15,7 +15,10 @@ declare global {
             tr: React.ElementAttributes
             td: React.ElementAttributes
             object: React.ObjectElementAttributes
+            // Non standard
             img: React.ImageElementAttributes
+            code: React.ElementAttributes
+            br: React.ElementAttributes
         }
     }
     //#endregion

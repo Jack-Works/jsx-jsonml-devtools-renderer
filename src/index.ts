@@ -47,19 +47,24 @@ export function installCustomObjectFormatter(formatter: CustomObjectFormatter) {
 
 //#region Types
 type JSONML = [keyof JSX.IntrinsicElements, ElementAttributes | ObjectElementAttributes, ...any[]] | string | number
-type CSSProperties = import('csstype').PropertiesHyphen
+export type Variants = keyof typeof darkTheme
+export type CSSProperties = import('csstype').PropertiesHyphen | import('csstype').Properties
 export interface ElementAttributes {
     /**
      * CSS of this element.
      *
      * Google's original proposal does not contains
-     * the object type `PropertiesHyphen`.
+     * the object type `CSS.Properties`.
      *
      * It is handled and transformed by this library.
      */
     style?: string | CSSProperties
     children?: JSX.Element[]
+    /**
+     * onClick event of the element.
+     */
     onClick?(): void
+    variant?: Variants[]
 }
 export interface ImageElementAttributes extends ElementAttributes {
     src: string
@@ -84,44 +89,40 @@ export function createElementTyped(
 ): JSX.Element {
     // If object has children, Chrome will not render it normally
     if (tag === 'object') _ = []
-    const props: ElementAttributes | ImageElementAttributes | ObjectElementAttributes | null = _props as any
+    const props: ElementAttributes | ImageElementAttributes | ObjectElementAttributes = (_props || {}) as any
 
-    if (tag === 'img') {
-        const { height = 'initial', src, width = 'initial', style, ...props } = _props as ImageElementAttributes
-        try {
-            const url = new URL(src, location.href)
-            return createElement('div', {
-                style: {
-                    content: `url("${url.toJSON()}")`,
-                    width: typeof width === 'number' ? width + 'px' : width,
-                    height: typeof height === 'number' ? height + 'px' : height,
-                    ...((style || {}) as CSSProperties)
-                } as CSSProperties,
-                ...props
-            })
-        } catch (e) {
-            console.error(e, src)
-            return createElement('div', {})
+    if (customElements.has(tag)) {
+        const handler = customElements.get(tag)!
+        if (typeof handler === 'function') return handler(props, ..._)
+        else {
+            const { style, ...rest } = props as ElementAttributes
+            return createElementTyped(
+                handler[0],
+                {
+                    style: normalizeStyle(handler[1]) + normalizeStyle(style),
+                    ...rest
+                },
+                ..._
+            )
         }
     }
 
-    if (props) {
-        // Transform CSS.PropertiesHyphen into string
-        if ('style' in props) {
-            const oldProps = props.style
-            if (typeof oldProps === 'object') {
-                props.style = (Object.keys(oldProps) as (keyof typeof oldProps)[])
-                    .map(k => k + ': ' + oldProps[k])
-                    .join(';')
-            }
-        }
-        // Transform onClick
-        if ('onClick' in props) {
-            installCustomObjectFormatter(new onClickHandler())
-            const { onClick, ...nextProps } = props
-            const specObject = onClickHandler.make(createElementTyped(tag, nextProps, ..._), onClick!)
-            return createElementTyped('object', { object: specObject })
-        }
+    // Handle themes
+    if ('variant' in props && props.variant) {
+        const theme = matchMedia(`(prefers-color-scheme: dark)`).matches ? darkTheme : lightTheme
+        const presetStyles = props.variant.map(type => theme[type])
+        props.style = Object.assign({}, ...presetStyles, props.style)
+    }
+    // Transform CSS.PropertiesHyphen into string
+    if ('style' in props) {
+        props.style = normalizeStyle(props.style)
+    }
+    // Transform onClick
+    if ('onClick' in props) {
+        installCustomObjectFormatter(new onClickHandler())
+        const { onClick, ...nextProps } = props
+        const specObject = onClickHandler.make(createElementTyped(tag, nextProps, ..._), onClick!)
+        return createElementTyped(tag, null, createElementTyped('object', { object: specObject }))
     }
 
     const children: JSONML[] = []
@@ -181,6 +182,7 @@ class onClickHandler implements CustomObjectFormatter {
         return null
     }
 }
+
 //#endregion
 
 //#region Helper
@@ -195,4 +197,103 @@ function isRenderableJSONML(x: unknown): x is JSONML {
     if (typeof x === 'object') return false
     return true
 }
+function normalizeStyle(style: CSSProperties | undefined | string) {
+    if (style === undefined) return ''
+    if (typeof style === 'string') return style + ';'
+    return (
+        (Object.keys(style) as (keyof typeof style)[])
+            .map(
+                k =>
+                    // Transform propertyName to property-name
+                    k.replace(/([a-z][A-Z])/g, function(g) {
+                        return g[0] + '-' + g[1].toLowerCase()
+                    }) +
+                    ': ' +
+                    style[k]
+            )
+            .join(';') + ';'
+    )
+}
+//#endregion
+
+//#region Keep states
+const objectMap = new WeakMap<object, any>()
+export function useState<State, T extends object = object>(bindingObject: T, initialState: (obj: T) => State) {
+    if (typeof bindingObject !== 'object' || bindingObject === null) {
+        throw new Error('Can not bind state to a non-object')
+    }
+    let state: Readonly<State>
+    if (objectMap.has(bindingObject)) state = objectMap.get(bindingObject)!
+    else state = initialState ? initialState(bindingObject) : ({} as State)
+    objectMap.set(bindingObject, state)
+    return [
+        state,
+        function setState(nextState: Partial<Readonly<State>>) {
+            state = Object.assign(state, nextState)
+            objectMap.set(bindingObject, state)
+        },
+        function forceRender() {
+            console.clear()
+            console.log(bindingObject)
+        }
+    ] as const
+}
+//#endregion
+
+//#region Common CSS
+const codeBlock: CSSProperties = { fontStyle: 'italic', fontFamily: 'monospace' }
+const dimmed: CSSProperties = { opacity: 0.6 }
+const darkTheme = {
+    propertyPreviewName: { color: 'rgb(169, 169, 169)' },
+    functionPrefix: { color: 'rgb(85, 106, 242)' },
+    propertyName: { color: 'rgb(227, 110, 236)' },
+    null: { color: 'rgb(127, 127, 127)' },
+    bigint: { color: 'rgb(158, 255, 158)' },
+    number: { color: 'hsl(252, 100%, 75%)' },
+    string: { color: 'rgb(233, 63, 59)', whiteSpace: 'pre', 'unicode-bidi': '-webkit-isolate' },
+    quote: { color: 'rgb(213, 213, 213)' },
+    node: { color: 'rgb(189, 198, 207)' },
+    fade: dimmed,
+    code: codeBlock
+}
+const lightTheme = {
+    propertyPreviewName: { color: '#565656' },
+    functionPrefix: { color: 'rgb(13, 34, 170)' },
+    propertyName: { color: 'rgb(136, 19, 145)' },
+    null: { color: 'rgb(128, 128, 128)' },
+    bigint: { color: 'rgb(0, 93, 0)' },
+    number: { color: 'rgb(28, 0, 207)' },
+    string: { color: 'rgb(196, 26, 22)', whiteSpace: 'pre', 'unicode-bidi': '-webkit-isolate' },
+    quote: { color: '#222' },
+    node: { color: 'rgb(48, 57, 66)' },
+    fade: dimmed,
+    code: codeBlock
+} as typeof darkTheme
+//#endregion
+
+//#region custom elements
+const customElements = new Map<
+    keyof JSX.IntrinsicElements,
+    ((props: any, ...children: JSX.Element[]) => JSX.Element) | [keyof JSX.IntrinsicElements, CSSProperties]
+>()
+customElements.set('code', ['span', codeBlock])
+customElements.set('br', ['div', { display: 'block', marginTop: '0.5em' }])
+customElements.set('img', (_props: ImageElementAttributes = {} as any, ...children) => {
+    const { height = 'initial', src, width = 'initial', style, ...props } = _props
+    try {
+        const url = new URL(src, location.href)
+        return createElement('span', {
+            style: {
+                content: `url("${url.toJSON()}")`,
+                width: typeof width === 'number' ? width + 'px' : width,
+                height: typeof height === 'number' ? height + 'px' : height,
+                ...((style || {}) as CSSProperties)
+            } as CSSProperties,
+            ...props
+        })
+    } catch (e) {
+        console.error(e, src)
+        return createElement('span', {}, e && e.message)
+    }
+})
 //#endregion
