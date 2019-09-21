@@ -83,10 +83,11 @@ export function isJSXElement(x: unknown): x is JSX.Element {
     return Array.isArray(x) && Reflect.get(x, JSX_Symbol)
 }
 export function createElementTyped(
-    tag: keyof JSX.IntrinsicElements,
+    tag: keyof JSX.IntrinsicElements | ((props: any) => JSX.Element),
     _props: ElementAttributes | ObjectElementAttributes | null,
     ..._: JSX.Element[]
 ): JSX.Element {
+    if (typeof tag === 'function') return tag(Object.assign({}, _props, { children: _ }))
     // If object has children, Chrome will not render it normally
     if (tag === 'object') _ = []
     const props: ElementAttributes | ImageElementAttributes | ObjectElementAttributes = (_props || {}) as any
