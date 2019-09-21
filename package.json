@@ -1,0 +1,19 @@
+{
+    "name": "jsx-jsonml-devtools-renderer",
+    "version": "1.2.0",
+    "description": "A JSX render for Chrome Devtools.",
+    "module": "out/index.js",
+    "author": "Jack Works<zjwpeter@gmail.com>",
+    "license": "MIT",
+    "types": "./src/global.d.ts",
+    "keywords": ["jsonml", "jsx", "devtools"],
+    "scripts": {
+        "prepublishOnly": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "csstype": "^2.6.6"
+    },
+    "repository": {
+        "url": ""
+    }
+}
