@@ -4,7 +4,6 @@
  */
 //#region Internal Symbols
 const JSX_Symbol = Symbol.for('JSON ML <=> JSX internal Symbol')
-const onClickHandler_Symbol = Symbol.for('Devtools Clickable Content')
 //#endregion
 
 //#region CustomObjectFormatter interface and installer
@@ -157,6 +156,7 @@ export const createElement = createElementTyped as (tag: string, props: any, ...
 /**
  * Handler for onClick event
  */
+const clickable = new WeakMap<object, () => [JSX.Element, () => void, unknown]>()
 class onClickHandler implements CustomObjectFormatter {
     static instance: onClickHandler
     constructor() {
@@ -164,20 +164,21 @@ class onClickHandler implements CustomObjectFormatter {
         onClickHandler.instance = this
     }
     static make(jsx: JSX.Element, onClick: () => void) {
-        const self = { [onClickHandler_Symbol]: () => [jsx, onClick, self] }
+        const self = {}
+        clickable.set(self, () => [jsx, onClick, self])
         return self
     }
     hasBody(obj: any) {
-        return !!obj[onClickHandler_Symbol]
+        return clickable.has(obj)
     }
     body(obj: any, config: any) {
-        const [jsx, f, ref] = obj[onClickHandler_Symbol]()
+        const [jsx, f, ref] = clickable.get(obj)!()
         f()
         return createElementTyped('div', {}, createElementTyped('object', { object: ref }))
     }
     header(obj: any) {
         if (this.hasBody(obj)) {
-            const [jsx, f] = obj[onClickHandler_Symbol]()
+            const [jsx] = clickable.get(obj)!()
             return jsx
         }
         return null
