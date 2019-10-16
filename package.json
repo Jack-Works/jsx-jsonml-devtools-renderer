@@ -1,18 +1,22 @@
 {
     "name": "jsx-jsonml-devtools-renderer",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "A JSX render for Chrome Devtools.",
     "module": "out/index.js",
-    "main": "out/index.js",
+    "main": "out/umd.js",
     "author": "Jack Works<zjwpeter@gmail.com>",
     "license": "MIT",
     "types": "./src/global.d.ts",
     "keywords": ["jsonml", "jsx", "devtools"],
     "scripts": {
-        "prepublishOnly": "tsc -p tsconfig.json"
+        "prepublishOnly": "tsc -p tsconfig.json && rollup ./out/index.js -f umd -n React -o out/umd.js"
     },
     "dependencies": {
         "csstype": "^2.6.6"
+    },
+    "devDependencies": {
+        "rollup": "latest",
+        "typescript": "latest"
     },
     "repository": {
         "url": "https://github.com/Jack-Works/jsx-jsonml-devtools-renderer"
