@@ -1,6 +1,6 @@
 {
     "name": "jsx-jsonml-devtools-renderer",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "A JSX render for Chrome Devtools.",
     "module": "out/index.js",
     "main": "out/index.js",

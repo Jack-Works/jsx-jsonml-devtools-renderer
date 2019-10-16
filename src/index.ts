@@ -147,6 +147,10 @@ export function createElementTyped(
     }
     // <object> cannot have children, or it will not render normally.
     if (children.length === 0 && tag !== 'object') children.push('')
+    // @ts-ignore
+    if (tag === 'object' && props.object === undefined) {
+        return createElementTyped('span', { variant: ['propertyPreviewName'] }, 'undefined')
+    }
     return makeArrayToJSXElement([tag, props, ...children])
 }
 export const createElement = createElementTyped as (tag: string, props: any, ...children: any[]) => JSX.Element
