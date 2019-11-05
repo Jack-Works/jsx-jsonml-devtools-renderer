@@ -1,6 +1,9 @@
-## Custom Object Formatters JSX Render in Chrome Devtools
+## jsx-jsonml-devtools-renderer [![npm][npmicon]][npmurl]
 
-See [Custom Object Formatters Chrome Devtools](https://docs.google.com/document/d/1FTascZXT9cxfetuPRT2eXPQKXui4nWFivUnS_335T3U/preview)
+This is a [Custom Object Formatter](https://docs.google.com/document/d/1FTascZXT9cxfetuPRT2eXPQKXui4nWFivUnS_335T3U/preview) for rendering JSX objects in Chrome Devtools. Yes, you can see them in the console now!
+
+  [npmicon]: https://img.shields.io/npm/v/jsx-jsonml-devtools-renderer?style=flat-square
+  [npmurl]: https://www.npmjs.com/package/jsx-jsonml-devtools-renderer
 
 ## How to use
 
