@@ -4,33 +4,44 @@ This is a [Custom Object Formatter](https://docs.google.com/document/d/1FTascZXT
 
   [npmicon]: https://img.shields.io/npm/v/jsx-jsonml-devtools-renderer?style=flat-square
   [npmurl]: https://www.npmjs.com/package/jsx-jsonml-devtools-renderer
+  
+ <img width="200" src="https://raw.githubusercontent.com/Jack-Works/jsx-jsonml-devtools-renderer/master/preview.png" />
 
 ## How to use
 
 ```tsx
-import * as React from 'jsx-jsonml-devtools-renderer'
-export class MyObjectCustomFormatter implements React.CustomObjectFormatter {
-    hasBody(obj: unknown) {
-        if (obj instanceof MyObject) return true
-        return false
-    }
-    body(obj: MyObject) {
-        return (
-            <div>
-                <img src="url" />
-                <span style={{ color: 'red' }} onClick={() => alert('Clicked')}>
-                    Button!
-                </span>
-                <object object={window} />
-            </div>
-        )
-    }
-    header(obj: unknown) {
-        if (!(obj instanceof MyObject)) return null
-        return <div>MyObject</div>
-    }
+import React from "jsx-jsonml-devtools-renderer";
+class MyObject {
+  type = 1;
+  innerData = "innerData";
 }
-React.installCustomObjectFormatter(new MyObjectCustomFormatter())
+class MyObjectCustomFormatter implements React.CustomObjectFormatter {
+  hasBody(obj: unknown) {
+    if (obj instanceof MyObject) return true;
+    return false;
+  }
+  body(obj: MyObject) {
+    return (
+      <div>
+        <table>
+          <tr style="background: rgba(255, 255, 255, 0.6)">
+            <td style="min-width: 4em">Type</td>
+            <td>Value</td>
+          </tr>
+          <tr>
+            <td>{obj.type}</td>
+            <td>{obj.innerData}</td>
+          </tr>
+        </table>
+      </div>
+    );
+  }
+  header(obj: unknown) {
+    if (!(obj instanceof MyObject)) return null;
+    return <div>MyObject (type: {obj.type})</div>;
+  }
+}
+React.installCustomObjectFormatter(new MyObjectCustomFormatter());
 ```
 
 ## Standard Custom Object Formatters features
