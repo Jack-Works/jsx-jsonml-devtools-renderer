@@ -35,11 +35,13 @@ export interface CustomObjectFormatter<T = any> {
  * @param formatter The formatter
  */
 export function installCustomObjectFormatter(formatter: CustomObjectFormatter) {
-    // @ts-ignore
-    const old = new Set(window.devtoolsFormatters || [])
-    old.add(formatter)
-    // @ts-ignore
-    window.devtoolsFormatters = Array.from(old)
+    try {
+        const old = new Set(window.devtoolsFormatters || [])
+        old.add(formatter)
+        window.devtoolsFormatters = Array.from(old)
+    } catch (e) {
+        console.error('Install custom object formatter failed.', e)
+    }
 }
 
 //#endregion
@@ -100,7 +102,7 @@ export function createElementTyped(
                 handler[0],
                 {
                     style: normalizeStyle(handler[1]) + normalizeStyle(style),
-                    ...rest
+                    ...rest,
                 },
                 ..._
             )
@@ -110,7 +112,7 @@ export function createElementTyped(
     // Handle themes
     if ('variant' in props && props.variant) {
         const theme = matchMedia(`(prefers-color-scheme: dark)`).matches ? darkTheme : lightTheme
-        const presetStyles = props.variant.map(type => theme[type])
+        const presetStyles = props.variant.map((type) => theme[type])
         props.style = Object.assign({}, ...presetStyles, props.style)
     }
     // Transform CSS.PropertiesHyphen into string
@@ -137,7 +139,7 @@ export function createElementTyped(
         // If child is an Array, and every of its child is JSX.Element
         // though it as pattern like {arr.map(x => <div />)}
         if (Array.isArray(child)) {
-            if (child.every(x => isRenderableJSONML(x))) {
+            if (child.every((x) => isRenderableJSONML(x))) {
                 children.push(...child)
                 continue
             }
@@ -209,9 +211,9 @@ function normalizeStyle(style: CSSProperties | undefined | string) {
     return (
         (Object.keys(style) as (keyof typeof style)[])
             .map(
-                k =>
+                (k) =>
                     // Transform propertyName to property-name
-                    k.replace(/([a-z][A-Z])/g, function(g) {
+                    k.replace(/([a-z][A-Z])/g, function (g) {
                         return g[0] + '-' + g[1].toLowerCase()
                     }) +
                     ': ' +
@@ -241,7 +243,7 @@ export function useState<State, T extends object = object>(bindingObject: T, ini
         function forceRender() {
             console.clear()
             console.log(bindingObject)
-        }
+        },
     ] as const
 }
 //#endregion
@@ -260,7 +262,7 @@ const darkTheme = {
     quote: { color: 'rgb(213, 213, 213)' },
     node: { color: 'rgb(189, 198, 207)' },
     fade: dimmed,
-    code: codeBlock
+    code: codeBlock,
 }
 const lightTheme = {
     propertyPreviewName: { color: '#565656' },
@@ -273,7 +275,7 @@ const lightTheme = {
     quote: { color: '#222' },
     node: { color: 'rgb(48, 57, 66)' },
     fade: dimmed,
-    code: codeBlock
+    code: codeBlock,
 } as typeof darkTheme
 //#endregion
 
@@ -293,9 +295,9 @@ customElements.set('img', (_props: ImageElementAttributes = {} as any, ...childr
                 content: `url("${url.toJSON()}")`,
                 width: typeof width === 'number' ? width + 'px' : width,
                 height: typeof height === 'number' ? height + 'px' : height,
-                ...((style || {}) as CSSProperties)
+                ...((style || {}) as CSSProperties),
             } as CSSProperties,
-            ...props
+            ...props,
         })
     } catch (e) {
         console.error(e, src)
