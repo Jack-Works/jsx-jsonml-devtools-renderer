@@ -7,12 +7,16 @@
     "author": "Jack Works<zjwpeter@gmail.com>",
     "license": "MIT",
     "types": "./src/global.d.ts",
-    "keywords": ["jsonml", "jsx", "devtools"],
+    "keywords": [
+        "jsonml",
+        "jsx",
+        "devtools"
+    ],
     "scripts": {
         "prepublishOnly": "tsc -p tsconfig.json && rollup ./out/index.js -f umd -n React -o out/umd.js"
     },
     "dependencies": {
-        "csstype": "^2.6.6"
+        "csstype": "^3.0.2"
     },
     "devDependencies": {
         "rollup": "latest",
